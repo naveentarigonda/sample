@@ -72,7 +72,6 @@
 		$now_date = date("Y-m-d");
 		$now_time = date("H:i:s");
 		$addedOn = date("Y-m-d H:i:s");
-		$changed_data = array();
 		$qry = mysql_query("SELECT fs.deviceId,fs.start_time,fs.BT_input,fs.update_status,fs.schedule_start FROM autofeeder_schedules fs INNER JOIN autofeeders f ON fs.deviceId=f.idautofeeders WHERE f.feederId='".$feederId."' AND fs.schedule_start<='".$now_date."' ORDER BY fs.schedule_start DESC LIMIT 1");
 		$count = mysql_num_rows($qry);
 		if($count==1){
@@ -100,6 +99,7 @@
 			$nowTime = date("H:i");
 			$modifiedOn = date("Y-m-d H:i:s");
 			foreach($sch_start_arry AS $key=>$val){
+				$changed_data = array();
 				if(!empty($no_cycles_arry[$key]) || $no_cycles_arry[$key]!==0){
 					if($schedule_date!=date("Y-m-d"))
 						$scheduleDate = date("Y-m-d");
@@ -117,6 +117,8 @@
 					$on_timer = mysql_real_escape_string($on_timer_arry[$key]);
 					//No of cycles completed
 					$no_cycles = mysql_real_escape_string($no_cycles_arry[$key]);
+					
+					//$sql = mysql_query("SELECT fid,schedule_date,start_time,feed_gap,feed_disp_time,no_cycles,ON_Timer FROM feeder_running_log WHERE fid='".$res['deviceId']."' AND schedule_date='".$scheduleDate."' AND sch_start='".$sch_start."' AND sch_end='".$sch_end."' AND feed_gap='".$feedGap."' AND feed_disp_time='".$feedDispTime."' AND ON_Timer='".$on_timer."' LIMIT 1");
 					$sql = mysql_query("SELECT fid,schedule_date,start_time,feed_gap,feed_disp_time,no_cycles,ON_Timer FROM feeder_running_log WHERE fid='".$res['deviceId']."' AND schedule_date='".$scheduleDate."' AND sch_start='".$sch_start."' AND sch_end='".$sch_end."' AND feed_gap='".$feedGap."' AND feed_disp_time='".$feedDispTime."' AND CAST(ON_Timer AS DECIMAL)=CAST($on_timer AS DECIMAL) LIMIT 1");
 					if(mysql_num_rows($sql)>=1){
 						$sql_res = mysql_fetch_assoc($sql);
@@ -134,6 +136,7 @@
 								$changed_data['no_cycles'] = $no_cycles;
 							}
 						}
+						//print_r($changed_data);
 						if(sizeof($changed_data)>=1){
 							if(strtotime($nowTime)>strtotime($sch_end)){
 								$run_end = strtotime($sch_start)+($feedGap*$no_cycles);
@@ -149,7 +152,7 @@
 								$stmt .= $sep.$key." = '".$value."'";
 								$sep = ",";
 							}
-							$stmt .= " WHERE fid='".$res['deviceId']."' AND schedule_date='".$scheduleDate."' AND sch_start='".$sch_start."' AND sch_end='".$sch_end."' AND feed_gap='".$feedGap."' AND feed_disp_time='".$feedDispTime."' AND CAST(ON_Timer AS DECIMAL)=CAST($on_timer AS DECIMAL)  LIMIT 1 ";
+							$stmt .= " WHERE fid='".$res['deviceId']."' AND schedule_date='".$scheduleDate."' AND sch_start='".$sch_start."' AND sch_end='".$sch_end."' AND feed_gap='".$feedGap."' AND feed_disp_time='".$feedDispTime."' AND CAST(ON_Timer AS DECIMAL)=CAST($on_timer AS DECIMAL) LIMIT 1 ";
 							$log = mysql_query($stmt);
 						}
 					}else{
